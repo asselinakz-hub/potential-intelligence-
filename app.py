@@ -7,7 +7,7 @@ st.set_page_config(
     page_title="Potential Intelligence™ | Sales Architecture Pilot",
     page_icon="✦",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 ASSESSMENT_URL = "https://tally.so/r/jaGY4J"
@@ -15,85 +15,477 @@ SAMPLE_REPORT_PATH = Path("reports/sample_report.html")
 NURLAN_REPORT_PATH = Path("reports/nurlan_report.html")
 METHODOLOGY_PATH = Path("methodology/indices_framework.md")
 
+PAGES = {
+    "home": "Home",
+    "assessment": "Take Assessment",
+    "report": "Sample Report",
+    "methodology": "Methodology",
+    "cases": "Case Studies",
+    "about": "About",
+}
+
+if "page" not in st.session_state:
+    st.session_state.page = "home"
+
+# Query param support
+try:
+    qp = st.query_params
+    if "page" in qp and qp["page"] in PAGES:
+        st.session_state.page = qp["page"]
+except Exception:
+    pass
+
+def set_page(page_key: str):
+    st.session_state.page = page_key
+    try:
+        st.query_params["page"] = page_key
+    except Exception:
+        pass
+
+
+# =========================================================
+# CSS
+# =========================================================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root{
---ink:#111218;--ink2:#1e2130;--gold:#c07d20;--gold2:#e8a832;--cream:#f8f4ee;--soft:#f4f1eb;--line:#e6e0d4;--muted:#6b6878;
+--ink:#0d0f15;
+--ink2:#171a26;
+--panel:#1e2130;
+--gold:#c07d20;
+--gold2:#e8a832;
+--cream:#f8f4ee;
+--soft:#f4f1eb;
+--line:rgba(255,255,255,.10);
+--muted:rgba(255,255,255,.58);
+--muted2:rgba(255,255,255,.38);
 }
-html,body,[class*="css"]{font-family:'Outfit',sans-serif;}
-.stApp{background:var(--cream);color:var(--ink);}
-.block-container{padding-top:2rem;padding-bottom:4rem;max-width:1180px;}
-section[data-testid="stSidebar"]{background:#111218;border-right:1px solid rgba(255,255,255,.08);}
-section[data-testid="stSidebar"] *{color:rgba(255,255,255,.78);}
-div[data-testid="stSidebarNav"]{display:none;}
-h1,h2,h3{font-family:'Cormorant Garamond',serif!important;letter-spacing:-.02em;}
-h1{font-size:4.2rem!important;line-height:.98!important;font-weight:700!important;}
-h2{font-size:2.8rem!important;line-height:1.08!important;}
-p,li{font-size:1rem;line-height:1.7;}
-.pi-hero{background:#1e2130;color:white;border-radius:8px;padding:4.2rem 4rem;position:relative;overflow:hidden;margin-bottom:2rem;box-shadow:0 30px 90px rgba(17,18,24,.18);}
-.pi-hero:before{content:'';position:absolute;right:-120px;top:-180px;width:560px;height:560px;border-radius:50%;border:1px solid rgba(232,168,50,.09);}
-.pi-hero *{position:relative;z-index:1;}
-.pi-gold{color:#e8a832;}
-.pi-badge{display:inline-flex;font-size:10px;font-weight:800;letter-spacing:3px;text-transform:uppercase;color:#e8a832;background:rgba(192,125,32,.11);border:1px solid rgba(192,125,32,.22);padding:7px 14px;border-radius:2px;margin-bottom:1.6rem;}
-.pi-sub{font-size:1.25rem;color:rgba(255,255,255,.76);line-height:1.65;max-width:760px;margin:1.2rem 0 1.8rem;}
-.pi-note{color:rgba(255,255,255,.46);font-size:.85rem;line-height:1.6;}
-.pi-btn-row{display:flex;gap:.8rem;flex-wrap:wrap;margin-top:1.5rem;}
-.pi-btn{display:inline-flex;align-items:center;justify-content:center;padding:.88rem 1.3rem;border-radius:3px;font-size:.76rem;font-weight:800;letter-spacing:.9px;text-transform:uppercase;text-decoration:none!important;}
-.pi-btn-primary{background:#e8a832;color:#1e2130!important;}
-.pi-btn-secondary{border:1px solid rgba(255,255,255,.22);color:rgba(255,255,255,.86)!important;}
-.pi-btn-light{border:1px solid var(--line);color:#1e2130!important;background:white;}
-.pi-section{margin:3.6rem 0 1.8rem;}
-.pi-kicker{font-size:9px;font-weight:800;letter-spacing:2.4px;text-transform:uppercase;color:#c07d20;margin-bottom:.5rem;}
-.pi-section-title{font-family:'Cormorant Garamond',serif;font-size:2.7rem;line-height:1.08;font-weight:700;color:#1e2130;letter-spacing:-.02em;margin-bottom:.8rem;}
-.pi-lead{font-size:1.08rem;color:#6b6878;line-height:1.72;max-width:860px;margin-bottom:2rem;}
-.pi-card{background:white;border:1px solid var(--line);border-radius:6px;padding:1.6rem;height:100%;box-shadow:0 12px 36px rgba(17,18,24,.05);}
-.pi-card-dark{background:#1e2130;color:white;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:1.8rem;height:100%;}
-.pi-card-dark p,.pi-card-dark li{color:rgba(255,255,255,.62);}
-.pi-title{font-size:1.08rem;font-weight:800;color:#1e2130;margin-bottom:.5rem;line-height:1.3;}
-.pi-card-dark .pi-title{color:white;}
-.pi-muted{color:#6b6878;}
-.pi-quote{background:#1e2130;color:white;border-radius:6px;padding:2rem;height:100%;}
-.pi-quote-main{font-family:'Cormorant Garamond',serif;font-size:1.9rem;line-height:1.28;color:rgba(255,255,255,.92);margin-bottom:1rem;}
-.pi-quote-small{color:rgba(255,255,255,.46);font-size:.85rem;}
-.pi-row{background:white;border:1px solid var(--line);border-radius:5px;padding:1.05rem 1.2rem;margin-bottom:.8rem;}
-.pi-pill{display:inline-block;font-size:.7rem;font-weight:800;color:#8f5608;background:#fff0cc;padding:.25rem .62rem;border-radius:2px;margin-top:.6rem;}
-.pi-step-num{font-family:'Cormorant Garamond',serif;font-size:2.7rem;font-weight:700;color:#c07d20;line-height:1;margin-bottom:.75rem;}
-.pi-footer{text-align:center;color:#6b6878;font-size:.86rem;padding:2rem 0;border-top:1px solid var(--line);margin-top:3rem;}
-iframe{border-radius:6px;}
-@media(max-width:800px){h1{font-size:3rem!important}.pi-hero{padding:2.4rem 1.8rem}.pi-section-title{font-size:2.2rem}}
+
+html, body, [class*="css"] {
+  font-family:'Outfit', sans-serif;
+}
+
+html, body, .stApp {
+  background:#0d0f15 !important;
+  color:white !important;
+}
+
+.stApp {
+  background:
+    radial-gradient(circle at 80% -10%, rgba(232,168,50,.10), transparent 38%),
+    radial-gradient(circle at 0% 100%, rgba(192,125,32,.05), transparent 34%),
+    #0d0f15 !important;
+}
+
+/* Hide Streamlit chrome */
+[data-testid="stSidebar"] { display:none !important; }
+[data-testid="collapsedControl"] { display:none !important; }
+#MainMenu { visibility:hidden; }
+footer { visibility:hidden; }
+header[data-testid="stHeader"] {
+  background: transparent !important;
+  height: 0rem !important;
+}
+
+/* Main container */
+.block-container {
+  padding-top: 0rem !important;
+  padding-bottom: 4rem;
+  max-width: 1180px;
+}
+
+/* Typography */
+h1,h2,h3 {
+  font-family:'Cormorant Garamond', serif !important;
+  letter-spacing:-.02em;
+  color:white !important;
+}
+
+h1 {
+  font-size:4.4rem !important;
+  line-height:.98 !important;
+  font-weight:700 !important;
+}
+
+h2 {
+  font-size:2.8rem !important;
+  line-height:1.08 !important;
+  font-weight:700 !important;
+}
+
+p, li {
+  font-size:1rem;
+  line-height:1.7;
+}
+
+/* Top nav */
+.pi-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 999;
+  margin: 0 -999px 2rem -999px;
+  padding: 0 999px;
+  background: rgba(13,15,21,.86);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.pi-topbar-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.pi-brand {
+  font-family:'Cormorant Garamond', serif;
+  color:white;
+  font-size: 27px;
+  font-weight: 700;
+  line-height: .9;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+}
+
+.pi-brand span {
+  color:#e8a832;
+}
+
+.pi-brand-sub {
+  font-family:'Outfit', sans-serif;
+  font-size: 9px;
+  letter-spacing: 2.6px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.35);
+  margin-top: 6px;
+}
+
+.pi-nav {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pi-nav a {
+  color: rgba(255,255,255,.64) !important;
+  text-decoration: none !important;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 11px;
+  border-radius: 3px;
+  transition: .16s ease;
+}
+
+.pi-nav a:hover {
+  color:#e8a832 !important;
+  background: rgba(232,168,50,.07);
+}
+
+.pi-nav a.active {
+  color:#1e2130 !important;
+  background:#e8a832;
+  font-weight:800;
+}
+
+.pi-nav a.cta {
+  color:#1e2130 !important;
+  background:#e8a832;
+  font-weight:800;
+  letter-spacing:.6px;
+  text-transform:uppercase;
+  margin-left:4px;
+}
+
+/* Components */
+.pi-hero {
+  background: #1e2130;
+  color: white;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 8px;
+  padding: 4.4rem 4rem;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 2.2rem;
+  box-shadow: 0 40px 120px rgba(0,0,0,.32);
+}
+
+.pi-hero:before {
+  content:'';
+  position:absolute;
+  right:-130px;
+  top:-190px;
+  width:610px;
+  height:610px;
+  border-radius:50%;
+  border:1px solid rgba(232,168,50,.10);
+}
+
+.pi-hero:after {
+  content:'';
+  position:absolute;
+  left:-240px;
+  bottom:-280px;
+  width:560px;
+  height:560px;
+  border-radius:50%;
+  border:1px solid rgba(232,168,50,.06);
+}
+
+.pi-hero * {
+  position:relative;
+  z-index:1;
+}
+
+.pi-badge {
+  display:inline-flex;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  color:#e8a832;
+  background:rgba(192,125,32,.11);
+  border:1px solid rgba(192,125,32,.26);
+  padding:7px 14px;
+  border-radius:2px;
+  margin-bottom:1.6rem;
+}
+
+.pi-gold { color:#e8a832; }
+
+.pi-sub {
+  font-size:1.25rem;
+  color:rgba(255,255,255,.76);
+  line-height:1.65;
+  max-width:780px;
+  margin:1.2rem 0 1.8rem;
+}
+
+.pi-note {
+  color:rgba(255,255,255,.46);
+  font-size:.86rem;
+  line-height:1.6;
+}
+
+.pi-btn-row {
+  display:flex;
+  gap:.8rem;
+  flex-wrap:wrap;
+  margin-top:1.5rem;
+}
+
+.pi-btn {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:.88rem 1.3rem;
+  border-radius:3px;
+  font-size:.76rem;
+  font-weight:800;
+  letter-spacing:.9px;
+  text-transform:uppercase;
+  text-decoration:none!important;
+}
+
+.pi-btn-primary {
+  background:#e8a832;
+  color:#1e2130!important;
+}
+
+.pi-btn-secondary {
+  border:1px solid rgba(255,255,255,.22);
+  color:rgba(255,255,255,.86)!important;
+}
+
+.pi-section {
+  margin:4rem 0 1.8rem;
+}
+
+.pi-kicker {
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:2.4px;
+  text-transform:uppercase;
+  color:#e8a832;
+  margin-bottom:.6rem;
+}
+
+.pi-section-title {
+  font-family:'Cormorant Garamond', serif;
+  font-size:2.75rem;
+  line-height:1.08;
+  font-weight:700;
+  color:white;
+  letter-spacing:-.02em;
+  margin-bottom:.8rem;
+}
+
+.pi-lead {
+  font-size:1.08rem;
+  color:rgba(255,255,255,.58);
+  line-height:1.72;
+  max-width:860px;
+  margin-bottom:2rem;
+}
+
+.pi-card {
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:6px;
+  padding:1.6rem;
+  height:100%;
+}
+
+.pi-card-solid {
+  background:#1e2130;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:6px;
+  padding:1.8rem;
+  height:100%;
+}
+
+.pi-title {
+  font-size:1.08rem;
+  font-weight:800;
+  color:white;
+  margin-bottom:.55rem;
+  line-height:1.32;
+}
+
+.pi-muted {
+  color:rgba(255,255,255,.58);
+}
+
+.pi-quote {
+  background:#1e2130;
+  color:white;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:6px;
+  padding:2rem;
+  height:100%;
+}
+
+.pi-quote-main {
+  font-family:'Cormorant Garamond', serif;
+  font-size:1.95rem;
+  line-height:1.28;
+  color:rgba(255,255,255,.94);
+  margin-bottom:1rem;
+}
+
+.pi-quote-small {
+  color:rgba(255,255,255,.46);
+  font-size:.86rem;
+}
+
+.pi-row {
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:5px;
+  padding:1.05rem 1.2rem;
+  margin-bottom:.8rem;
+}
+
+.pi-pill {
+  display:inline-block;
+  font-size:.7rem;
+  font-weight:800;
+  color:#e8a832;
+  background:rgba(232,168,50,.10);
+  border:1px solid rgba(232,168,50,.18);
+  padding:.25rem .62rem;
+  border-radius:2px;
+  margin-top:.6rem;
+}
+
+.pi-step-num {
+  font-family:'Cormorant Garamond', serif;
+  font-size:2.7rem;
+  font-weight:700;
+  color:#e8a832;
+  line-height:1;
+  margin-bottom:.75rem;
+}
+
+.pi-footer {
+  text-align:center;
+  color:rgba(255,255,255,.40);
+  font-size:.86rem;
+  padding:2.2rem 0;
+  border-top:1px solid rgba(255,255,255,.08);
+  margin-top:3rem;
+}
+
+iframe {
+  border-radius:6px;
+  background:#fff;
+}
+
+/* Streamlit widgets */
+.stTabs [data-baseweb="tab-list"] {
+  gap: 8px;
+}
+
+.stTabs [data-baseweb="tab"] {
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 3px;
+  color: rgba(255,255,255,.70);
+}
+
+.stTabs [aria-selected="true"] {
+  background: rgba(232,168,50,.14) !important;
+  color: #e8a832 !important;
+}
+
+.streamlit-expanderHeader {
+  color:white !important;
+  font-weight:800;
+}
+
+div[data-testid="stExpander"] {
+  background: rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:6px;
+}
+
+/* responsive */
+@media(max-width:900px) {
+  h1 { font-size:3rem!important; }
+  .pi-hero { padding:2.4rem 1.8rem; }
+  .pi-section-title { font-size:2.2rem; }
+  .pi-topbar-inner { flex-direction:column; align-items:flex-start; }
+  .pi-nav { justify-content:flex-start; }
+}
 </style>
 """, unsafe_allow_html=True)
 
 
-def sidebar():
-    st.sidebar.markdown("""
-    <div style="padding:1rem 0 1.4rem;">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:700;color:white;line-height:1;">
-        Potential <span style="color:#e8a832;">Intelligence™</span>
-      </div>
-      <div style="font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.38);margin-top:8px;">
-        Validation Hub
+def nav():
+    current = st.session_state.page
+    links = ""
+    for key, label in PAGES.items():
+        active = "active" if key == current else ""
+        links += f'<a class="{active}" href="?page={key}">{label}</a>'
+    links += f'<a class="cta" href="{ASSESSMENT_URL}" target="_blank">Take Assessment</a>'
+
+    st.markdown(f"""
+    <div class="pi-topbar">
+      <div class="pi-topbar-inner">
+        <div>
+          <div class="pi-brand">Potential <span>Intelligence™</span></div>
+          <div class="pi-brand-sub">Validation Hub</div>
+        </div>
+        <div class="pi-nav">{links}</div>
       </div>
     </div>
     """, unsafe_allow_html=True)
-
-    page = st.sidebar.radio(
-        "Navigation",
-        ["Home", "Take Assessment", "Sample Report", "Methodology", "Case Studies", "About"],
-        label_visibility="collapsed",
-    )
-
-    st.sidebar.markdown("---")
-    st.sidebar.markdown(f"""
-    <a href="{ASSESSMENT_URL}" target="_blank" style="
-      display:block;text-align:center;background:#e8a832;color:#1e2130;
-      padding:12px 14px;border-radius:3px;font-size:12px;font-weight:800;
-      letter-spacing:.8px;text-transform:uppercase;text-decoration:none;">Take Assessment</a>
-    """, unsafe_allow_html=True)
-    st.sidebar.caption("Pilot validation · not performance evaluation")
-    return page
 
 
 def section_header(kicker, title, lead=None):
@@ -106,12 +498,11 @@ def section_header(kicker, title, lead=None):
     """, unsafe_allow_html=True)
 
 
-def cta_buttons(light=False):
-    secondary = "pi-btn-light" if light else "pi-btn-secondary"
+def cta_buttons():
     st.markdown(f"""
     <div class="pi-btn-row">
       <a class="pi-btn pi-btn-primary" href="{ASSESSMENT_URL}" target="_blank">Take the assessment — free</a>
-      <a class="pi-btn {secondary}" href="#sample-report">View sample report</a>
+      <a class="pi-btn pi-btn-secondary" href="?page=report">View sample report</a>
     </div>
     """, unsafe_allow_html=True)
 
@@ -142,7 +533,7 @@ def home():
       </div>
       <div class="pi-btn-row">
         <a class="pi-btn pi-btn-primary" href="{ASSESSMENT_URL}" target="_blank">Take the assessment — free</a>
-        <a class="pi-btn pi-btn-secondary" href="#what-you-receive">See what you receive</a>
+        <a class="pi-btn pi-btn-secondary" href="?page=report">See what you receive</a>
       </div>
       <div class="pi-note">Validation pilot for Sales Leaders, HR Partners, founders, and revenue teams. This is validation, not evaluation.</div>
     </div>
@@ -187,19 +578,19 @@ def home():
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("""
-        <div class="pi-card-dark">
+        <div class="pi-card-solid">
           <div class="pi-kicker">Sarah</div>
           <div class="pi-title">High decision momentum</div>
-          <p>Converts interest into clear next steps. Creates urgency and ownership faster.</p>
+          <p class="pi-muted">Converts interest into clear next steps. Creates urgency and ownership faster.</p>
           <div style="font-family:'Cormorant Garamond',serif;font-size:52px;color:#e8a832;font-weight:700;">78%</div>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
-        <div class="pi-card-dark">
+        <div class="pi-card-solid">
           <div class="pi-kicker">Marcus</div>
           <div class="pi-title">Strong discovery, slower commitment</div>
-          <p>Builds trust and gets positive buyer feedback, but deals may stay warm without movement.</p>
+          <p class="pi-muted">Builds trust and gets positive buyer feedback, but deals may stay warm without movement.</p>
           <div style="font-family:'Cormorant Garamond',serif;font-size:52px;color:#e8a832;font-weight:700;">41%</div>
         </div>
         """, unsafe_allow_html=True)
@@ -209,7 +600,6 @@ def home():
         "A validation report built to support a better coaching conversation.",
         "The participant receives an individual report that translates assessment answers into a sales behavior map. It is written for real-world use by the participant, manager, or HR partner.",
     )
-    st.markdown('<div id="what-you-receive"></div>', unsafe_allow_html=True)
 
     rows = [
         ("Natural Sales Pattern", "A plain-language summary of how this person creates revenue, what environment fits best, and what should be validated in real deals.", "Executive Summary"),
@@ -229,7 +619,7 @@ def home():
         </div>
         """, unsafe_allow_html=True)
 
-    cta_buttons(light=True)
+    cta_buttons()
 
 
 def assessment():
@@ -239,21 +629,21 @@ def assessment():
         "This form is part of the validation pilot. You will receive a pilot report and may be asked to share feedback on what feels accurate, useful, confusing, or wrong.",
     )
     st.markdown(f"""
-    <div class="pi-card-dark">
+    <div class="pi-card-solid">
       <div class="pi-kicker">Pilot assessment</div>
       <div class="pi-title">Start the assessment in Tally</div>
-      <p>The assessment opens in a new tab. After submission, your answers can be used to generate the individual validation report.</p>
+      <p class="pi-muted">The assessment opens in a new tab. After submission, your answers can be used to generate the individual validation report.</p>
       <div class="pi-btn-row">
         <a class="pi-btn pi-btn-primary" href="{ASSESSMENT_URL}" target="_blank">Open assessment</a>
       </div>
     </div>
     """, unsafe_allow_html=True)
+
     st.markdown("### Embedded form")
     components.iframe(ASSESSMENT_URL, height=760, scrolling=True)
 
 
 def sample_report():
-    st.markdown('<div id="sample-report"></div>', unsafe_allow_html=True)
     section_header(
         "Sample report",
         "Sales Architecture Validation Report",
@@ -267,6 +657,7 @@ def sample_report():
     with tabs[2]:
         st.markdown("""
         **Recommended setup**
+
         - Put your general sample report here: `reports/sample_report.html`
         - Put Nurlan's validation case here: `reports/nurlan_report.html`
         - Use this page during calls when someone asks: “What will I receive?”
@@ -309,7 +700,7 @@ def methodology():
         """)
 
 
-def case_studies():
+def cases():
     section_header(
         "Case studies",
         "Build the evidence base one real case at a time.",
@@ -351,22 +742,22 @@ def about():
     col1, col2 = st.columns(2)
     with col1:
         st.markdown("""
-        <div class="pi-card-dark">
+        <div class="pi-card-solid">
           <div class="pi-title">Asselya Zhanybek</div>
           <p><strong style="color:#e8a832;">HR, talent diagnostics, learning systems, and workforce intelligence</strong></p>
-          <p>15+ years across HR consulting, corporate learning, assessment tools, and workforce development.</p>
-          <p>Asselya is building Potential Intelligence™ as a practical framework for understanding how people actually perform — especially in roles where behavior, trust, pressure, and execution all matter.</p>
-          <p>Based in San Diego. Currently validating the first version with real participants and feedback.</p>
+          <p class="pi-muted">15+ years across HR consulting, corporate learning, assessment tools, and workforce development.</p>
+          <p class="pi-muted">Asselya is building Potential Intelligence™ as a practical framework for understanding how people actually perform — especially in roles where behavior, trust, pressure, and execution all matter.</p>
+          <p class="pi-muted">Based in San Diego. Currently validating the first version with real participants and feedback.</p>
         </div>
         """, unsafe_allow_html=True)
     with col2:
         st.markdown("""
-        <div class="pi-card-dark">
+        <div class="pi-card-solid">
           <div class="pi-title">Nurlan Zhanybek</div>
           <p><strong style="color:#e8a832;">Enterprise sales validation advisor</strong></p>
-          <p>15+ years in enterprise sales and global technology companies, including Microsoft and Pearson.</p>
-          <p>Nurlan helps pressure-test the framework against real sales behavior, sales cycles, buyer conversations, and the realities of quota-driven environments.</p>
-          <p>This helps keep the product grounded in how enterprise sales actually works — not only how assessments describe people.</p>
+          <p class="pi-muted">15+ years in enterprise sales and global technology companies, including Microsoft and Pearson.</p>
+          <p class="pi-muted">Nurlan helps pressure-test the framework against real sales behavior, sales cycles, buyer conversations, and the realities of quota-driven environments.</p>
+          <p class="pi-muted">This helps keep the product grounded in how enterprise sales actually works — not only how assessments describe people.</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -385,21 +776,23 @@ def about():
               <div class="pi-muted">{body}</div>
             </div>
             """, unsafe_allow_html=True)
-    cta_buttons(light=True)
+    cta_buttons()
 
 
-page = sidebar()
-if page == "Home":
+nav()
+
+page = st.session_state.page
+if page == "home":
     home()
-elif page == "Take Assessment":
+elif page == "assessment":
     assessment()
-elif page == "Sample Report":
+elif page == "report":
     sample_report()
-elif page == "Methodology":
+elif page == "methodology":
     methodology()
-elif page == "Case Studies":
-    case_studies()
-elif page == "About":
+elif page == "cases":
+    cases()
+elif page == "about":
     about()
 
 st.markdown("""
