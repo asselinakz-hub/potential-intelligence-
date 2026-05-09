@@ -509,12 +509,16 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-tabs = st.tabs(["Sample Report", "Nurlan Case"])
-with tabs[0]:
-    render_html_file(SAMPLE_REPORT_PATH)
-with tabs[1]:
-    render_html_file(NURLAN_REPORT_PATH)
+st.markdown("""
+<div class="pi-section" style="margin-top:2rem;">
+  <div class="pi-kicker">Sample preview</div>
+  <div class="pi-lead">
+    Below is an example of the individual Sales Architecture Report participants receive after completing the assessment.
+  </div>
+</div>
+""", unsafe_allow_html=True)
 
+render_html_file(SAMPLE_REPORT_PATH, height=760)
 
 section_header(
     "process",
